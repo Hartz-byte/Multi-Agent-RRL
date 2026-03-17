@@ -24,7 +24,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"status": "running", "version": "1.0.0"}
+    return {"status": "Multi-Agent Research AI Backend is Running!"}
 
 @app.get("/health")
 async def health():

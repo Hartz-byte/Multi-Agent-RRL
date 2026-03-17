@@ -80,7 +80,7 @@ async def fetch_openalex_papers(query: str, max_results: int = 5):
         print(f"Error fetching from OpenAlex: {e}")
         return []
 
-async def fetch_papers(query: str, max_results: int = 10):
+async def fetch_papers(query: str, max_results: int = 4):
     """
     Fetch papers from multiple sources (ArXiv & OpenAlex) in parallel.
     Biases towards previously liked papers if found in Pinecone.

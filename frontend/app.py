@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import graphviz
 import time
-
 import os
 
 # Use environment variable for API URL in production, default to localhost for development
@@ -61,8 +60,39 @@ def add_log(msg):
     timestamp = time.strftime("%H:%M:%S")
     st.session_state.logs.append(f"[{timestamp}] {msg}")
 
+def check_connection():
+    try:
+        res = requests.get(f"{API}/", timeout=10)
+        if res.status_code == 200:
+            st.toast("✅ Backend is Online!")
+            add_log("Connection Check: Backend is Online.")
+            return True
+        else:
+            st.toast(f"⚠️ Backend returned status {res.status_code}", icon="⚠️")
+            add_log(f"Connection Check: Unexpected status {res.status_code}")
+            return False
+    except Exception as e:
+        st.toast("❌ Backend is Offline or Waking Up...", icon="❌")
+        add_log(f"Connection Check: Offline ({str(e)})")
+        return False
+
 # --- Sidebar: Instructions, Examples, & Logs ---
 with st.sidebar:
+    # Render Note
+    st.info(f"💡 **Note:** The backend gets inactive (Render Free Tier), click [here]({API}) to wake it up.")
+    
+    # Action Buttons
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🔌 Check Connection", use_container_width=True):
+            check_connection()
+    with col_btn2:
+        if st.button("🗑️ Clear Result & Logs", use_container_width=True):
+            st.session_state.analysis_result = None
+            st.session_state.logs = ["Logs cleared. System ready."]
+            st.rerun()
+
+    st.markdown("---")
     st.markdown("### 🧭 Project Guide")
     st.info("""
     1. Enter a research topic.
@@ -130,7 +160,7 @@ if active_view == "🔍 Research Pipeline":
         
         with st.spinner("🚀 Executing Multi-Agent Pipeline... (Retrieving, Parsing, & Reasoning)"):
             try:
-                res = requests.post(f"{API}/analyze", params={"topic": topic}, timeout=180)
+                res = requests.post(f"{API}/analyze", params={"topic": topic}, timeout=300)
                 if res.status_code == 200:
                     add_log("Parser Agent: Extracting structured data from PDFs...")
                     add_log("Analyzer Agent: Identifying Trends & Contradictions...")
@@ -223,32 +253,43 @@ if active_view == "🔍 Research Pipeline":
 elif active_view == "ℹ️ About the project":
     st.markdown("# About the Project")
     st.markdown("""
-    **Multi-Agent Research AI** is a highly capable Autonomous Agentic Retrieval-Augmented Generation (RAG) application. It acts as your ultimate, personal academic knowledge assistant.
+    **Multi-Agent Research AI** is a state-of-the-art Autonomous Agentic Retrieval-Augmented Generation (RAG) platform. It serves as a personal AI Research Assistant, transforming the way scholars and researchers interact with academic literature.
 
-    It allows you to automate the discovery of research gaps by combining various scientific data sources (ArXiv & OpenAlex), and then uses an intelligent multi-agent reasoning flow to determine how to best synthesize literature reviews and research proposals.
+    By orchestrating a swarm of specialized agents, the system moves beyond simple summarization to perform **Autonomous Discovery**—identifying what is *missing* in a scientific domain and proposing high-impact research directions.
     """)
+
+    st.info("⚡ **Cloud Performance Optimization:** Since this application is currently running on the Render Free Tier (limited CPU/RAM), the system is configured to analyze the top **4 most relevant papers** per topic to ensure processing completes within timeout limits. On dedicated instances, this capacity can be scaled up to 50+ papers.")
 
     st.markdown("## ✨ Key Features")
     st.markdown("""
-    - **Autonomous Research Discovery**:
-        - **ArXiv & OpenAlex Ingestion**: Ingest high-quality research papers and persistent metadata seamlessly.
-        - **Automatic PDF Parsing**: Extract methodologies, datasets, and findings directly from paper content using Llama 3.3.
-    - **Agentic Reasoning Loop**: The pipeline utilizes specialized agents (Retriever, Parser, Analyzer, Gap Finder, Writer) that interpreted research trends and identified missing links.
-    - **Self-Improving RAG (Reflection)**: Retrieves papers and autonomously grades them for strict relevance before attempting to draft a synthesis.
-    - **Persistent Cloud Vector Storage**: Pinecone Serverless ensures you never lose research context between different topics or sessions.
+    - **Multi-Source Autonomous Discovery**: 
+        - Parallel ingestion from **ArXiv** and **OpenAlex** (covering millions of scientific works).
+        - Bias-correction: Automatically prioritizes research clusters based on your historical feedback.
+    - **Agentic Orchestration (LangGraph)**:
+        - Uses a directed cyclic graph to coordinate specialized agents: **Retriever, Parser, Analyzer, Gap Finder, and Writer**.
+        - Internal **Self-Reflection** loop ensures research outputs are grounded in evidence.
+    - **Structural Intelligence**:
+        - **Deep PDF Scraping**: Extracts methodologies, experimental setups, and datasets directly from journal PDFs using Llama 3.3.
+        - **Trend & Contradiction Detection**: Identifies how techniques evolve over time and where global studies disagree.
+    - **Relational Mapping**: Graph-based visualization of connection points between papers, methods, and datasets.
+    - **Self-Improving RAG**: A persistent feedback loop stored in Pinecone that learns your technical preferences over time.
     """)
 
     st.markdown("## 🛠️ Tech Stack & Tools")
     st.markdown("""
-    - **Frontend Ecosystem**: Streamlit, Graphviz, CSS Custom Theming.
-    - **Backend Framework**: FastAPI (Python), LangGraph Orchestration.
-    - **Cloud Vector Database**: Pinecone Serverless.
-    - **Embeddings**: `all-MiniLM-L6-v2` (Local Inference).
-    - **Generative AI Engines**: Groq API
-        - **Llama 3.3 70B**: Core Reasoning, Synthesis & Complex Parsing.
-        - **Llama 3.1 8B**: Fast Metadata Analysis & Relevance Checking.
+    - **Orchestration & Workflow**: LangGraph, LangChain, Asyncio Parallel Processing.
+    - **Generative AI (Groq API)**:
+        - **Llama 3.3 70B**: The "Brain"—handles complex reasoning, PhD-grade synthesis, and structured JSON parsing.
+        - **Llama 3.1 8B**: The "Router"—used for fast relevance grading and metadata classification.
+    - **Knowledge & Memory**:
+        - **Pinecone Serverless**: High-performance vector database for persistent long-term research memory.
+        - **Local Embeddings**: `all-MiniLM-L6-v2` for ultra-fast semantic similarity checks.
+    - **Visual & Interface**:
+        - **Streamlit**: Modern, premium dashboard with real-time logging.
+        - **Graphviz & NetworkX**: High-resolution relational knowledge graph rendering.
+    - **Backend Architecture**: FastAPI (Asynchronous Python) on Render.
     """)
 
     st.markdown("---")
     st.markdown("### ⭐️ Support the Project")
-    st.write("Liked my work? Check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
+    st.write("If this system assisted your research, check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
