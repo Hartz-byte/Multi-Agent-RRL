@@ -110,8 +110,8 @@ Multi-Agent-RRL/
 ```bash
 git clone https://github.com/Hartz-byte/Multi-Agent-RRL.git
 cd Multi-Agent-RRL
-python -m venv venv
-source venv/bin/activate  # venv\Scripts\activate on Windows
+py -3.10 -m venv venv
+venv/Scripts/activate
 ```
 
 ### 2. Install Dependencies
