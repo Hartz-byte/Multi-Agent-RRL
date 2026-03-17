@@ -7,15 +7,41 @@ API = "http://localhost:10000"
 
 st.set_page_config(page_title="Multi-Agent Research AI", layout="wide", page_icon="🛡️")
 
-# Custom CSS for Premium Look
+# Custom CSS for Premium Look and Horizontal Radio
 st.markdown("""
 <style>
+    /* Radio button styling to look like a navbar */
+    div[data-testid="stHorizontalBlock"] {
+        align-items: center;
+    }
+    div[role="radiogroup"] {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        background: transparent;
+        padding: 5px 0;
+    }
+    div[role="radiogroup"] label {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-weight: 400 !important;
+        color: #ffffff !important;
+    }
+    div[role="radiogroup"] label[data-baseweb="radio"] {
+        padding-right: 20px !important;
+    }
+    
+    /* Title styling */
+    .main-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
     .stTabs [data-baseweb="tab-list"] { align-items: center; justify-content: center; }
     .stTabs [data-baseweb="tab"] { font-size: 1.1rem; font-weight: 600; padding: 10px 20px; }
-    .main-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; }
-    .stButton > button { border-radius: 8px; font-weight: 600; }
-    .nav-btn { background-color: #f0f2f6; border: 1px solid #d1d5db; }
-    .active-nav { background-color: #1f2937 !important; color: white !important; }
     .log-box { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; background-color: #0e1117; color: #00ff41; padding: 10px; border-radius: 5px; height: 300px; overflow-y: auto; }
 </style>
 """, unsafe_allow_html=True)
@@ -25,8 +51,6 @@ if 'analysis_result' not in st.session_state:
     st.session_state.analysis_result = None
 if 'current_topic' not in st.session_state:
     st.session_state.current_topic = ""
-if 'active_view' not in st.session_state:
-    st.session_state.active_view = "Research"
 if 'logs' not in st.session_state:
     st.session_state.logs = ["System ready. Awaiting topic input..."]
 
@@ -36,9 +60,6 @@ def add_log(msg):
 
 # --- Sidebar: Instructions, Examples, & Logs ---
 with st.sidebar:
-    st.header("🏢 Research Workspace")
-    st.markdown("---")
-    
     st.markdown("### 🧭 Project Guide")
     st.info("""
     1. Enter a research topic.
@@ -58,7 +79,6 @@ with st.sidebar:
     for ex in examples:
         if st.button(ex, use_container_width=True, key=f"ex_{ex}"):
             st.session_state.current_topic = ex
-            st.session_state.active_view = "Research"
             st.rerun()
 
     st.markdown("---")
@@ -66,25 +86,20 @@ with st.sidebar:
     log_content = "\n".join(st.session_state.logs[::-1]) # Show latest first
     st.markdown(f'<div class="log-box">{log_content}</div>', unsafe_allow_html=True)
 
-# --- Main Title Area ---
-st.title("🛡️ Multi-Agent AI RRL Research System")
-st.caption("Autonomous Discovery of Research Gaps & Literature Synthesis")
+# --- Header Area (Matching Screenshot) ---
+st.markdown('<div class="main-title">Multi-Agent Research AI 🛡️</div>', unsafe_allow_html=True)
 
-# --- Navbar-like Buttons ---
-col_nav1, col_nav2 = st.columns([1, 1])
-with col_nav1:
-    if st.button("🔍 Research Pipeline", use_container_width=True, type="primary" if st.session_state.active_view == "Research" else "secondary"):
-        st.session_state.active_view = "Research"
-        st.rerun()
-with col_nav2:
-    if st.button("ℹ️ About the Project", use_container_width=True, type="primary" if st.session_state.active_view == "About" else "secondary"):
-        st.session_state.active_view = "About"
-        st.rerun()
-
-st.markdown("---")
+# Navbar using st.radio with custom horizontal styling
+active_view = st.radio(
+    label="Hidden",
+    options=["🔍 Research Pipeline", "ℹ️ About the project"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
 
 # --- VIEW: RESEARCH ---
-if st.session_state.active_view == "Research":
+if active_view == "🔍 Research Pipeline":
+    st.header(active_view)
     # Main Input Area
     col_in1, col_in2 = st.columns([4, 1])
     with col_in1:
@@ -202,39 +217,35 @@ if st.session_state.active_view == "Research":
             st.write("Enter a topic above or select an example from the sidebar to begin your research journey.")
 
 # --- VIEW: ABOUT ---
-elif st.session_state.active_view == "About":
-    st.markdown("## ℹ️ About the Project")
-    
-    col_about1, col_about2 = st.columns([2, 1])
-    
-    with col_about1:
-        st.markdown("""
-        ### 🎯 Purpose
-        The **Multi-Agent AI RRL Research System** is designed to transform the academic literature review process (RRL). 
-        By leveraging specialized AI agents, the system moves beyond simple search and summarization to **autonomous discovery**. 
-        It identifies what is *missing* in a domain, flags contradictions between studies, and proposes novel research directions grounded in identified gaps.
+elif active_view == "ℹ️ About the project":
+    st.markdown("# About the Project")
+    st.markdown("""
+    **Multi-Agent Research AI** is a highly capable Autonomous Agentic Retrieval-Augmented Generation (RAG) application. It acts as your ultimate, personal academic knowledge assistant.
 
-        ### 🚀 Key Features
-        - **Parallel Intelligence**: Concurrent fetching from ArXiv & OpenAlex reduces search time by 60%.
-        - **Multi-Agent Reasoning**: Orchestrated via LangGraph, agents specialize in Trend Analysis, Contradiction Detection, and Gap Finding.
-        - **Relational Mapping**: Graph-based visualization of paper relationships, methods, and datasets.
-        - **Self-Improving Loop**: Learns from user feedback to bias future retrieval towards highly relevant clusters.
-        - **PhD-Grade Synthesis**: Generates structured Literature Reviews and full PhD-level research proposals.
-        """)
-        
-        st.markdown("---")
-        st.markdown("### ⭐️ Support the Project")
-        st.write("Liked my work? Check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
-    
-    with col_about2:
-        st.markdown("### 🛠️ Tech Stack & Tools")
-        st.success("**Core Orchestration**: LangGraph")
-        st.info("**LLM Engine**: Groq (Llama 3.3 70B & Llama 3.1 8B)")
-        st.warning("**Vector Database**: Pinecone (Serverless)")
-        st.error("**Graph Engine**: NetworkX & Graphviz")
-        st.markdown("**Backend**: FastAPI (Python)")
-        st.markdown("**Frontend**: Streamlit")
-        st.markdown("**Search**: ArXiv & OpenAlex APIs")
-        st.markdown("**PDF Parsing**: PyMuPDF (fitz)")
-        
-        st.image("https://img.icons8.com/clouds/100/code.png", width=100)
+    It allows you to automate the discovery of research gaps by combining various scientific data sources (ArXiv & OpenAlex), and then uses an intelligent multi-agent reasoning flow to determine how to best synthesize literature reviews and research proposals.
+    """)
+
+    st.markdown("## ✨ Key Features")
+    st.markdown("""
+    - **Autonomous Research Discovery**:
+        - **ArXiv & OpenAlex Ingestion**: Ingest high-quality research papers and persistent metadata seamlessly.
+        - **Automatic PDF Parsing**: Extract methodologies, datasets, and findings directly from paper content using Llama 3.3.
+    - **Agentic Reasoning Loop**: The pipeline utilizes specialized agents (Retriever, Parser, Analyzer, Gap Finder, Writer) that interpreted research trends and identified missing links.
+    - **Self-Improving RAG (Reflection)**: Retrieves papers and autonomously grades them for strict relevance before attempting to draft a synthesis.
+    - **Persistent Cloud Vector Storage**: Pinecone Serverless ensures you never lose research context between different topics or sessions.
+    """)
+
+    st.markdown("## 🛠️ Tech Stack & Tools")
+    st.markdown("""
+    - **Frontend Ecosystem**: Streamlit, Graphviz, CSS Custom Theming.
+    - **Backend Framework**: FastAPI (Python), LangGraph Orchestration.
+    - **Cloud Vector Database**: Pinecone Serverless.
+    - **Embeddings**: `all-MiniLM-L6-v2` (Local Inference).
+    - **Generative AI Engines**: Groq API
+        - **Llama 3.3 70B**: Core Reasoning, Synthesis & Complex Parsing.
+        - **Llama 3.1 8B**: Fast Metadata Analysis & Relevance Checking.
+    """)
+
+    st.markdown("---")
+    st.markdown("### ⭐️ Support the Project")
+    st.write("Liked my work? Check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
