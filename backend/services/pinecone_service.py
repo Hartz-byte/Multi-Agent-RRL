@@ -1,11 +1,12 @@
 from pinecone import Pinecone, ServerlessSpec
 from backend.app.config import PINECONE_API_KEY, PINECONE_INDEX
 import time
+import logging
 
-# Initialize Pinecone
-pc = Pinecone(api_key=PINECONE_API_KEY)
+logger = logging.getLogger(__name__)
 
-# Singleton index holder
+# Singleton index and client holder
+_pc_instance = None
 _index_instance = None
 
 def get_index():
@@ -13,17 +14,24 @@ def get_index():
     Lazy loader for the Pinecone index. 
     Attempts to create the index if it doesn't exist.
     """
-    global _index_instance
+    global _index_instance, _pc_instance
     if _index_instance is not None:
         return _index_instance
 
+    if not PINECONE_API_KEY:
+        logger.error("PINECONE_API_KEY not found in environment variables.")
+        return None
+
     try:
+        if _pc_instance is None:
+            _pc_instance = Pinecone(api_key=PINECONE_API_KEY)
+            
         # Check if index exists
-        existing_indexes = [idx.name for idx in pc.list_indexes()]
+        existing_indexes = [idx.name for idx in _pc_instance.list_indexes()]
         
         if PINECONE_INDEX not in existing_indexes:
-            print(f"Index {PINECONE_INDEX} not found. Creating a new Serverless index...")
-            pc.create_index(
+            logger.info(f"Index {PINECONE_INDEX} not found. Creating a new Serverless index...")
+            _pc_instance.create_index(
                 name=PINECONE_INDEX,
                 dimension=384, # Matching all-MiniLM-L6-v2
                 metric="cosine",
@@ -33,13 +41,13 @@ def get_index():
                 )
             )
             # Wait for index to be ready
-            while not pc.describe_index(PINECONE_INDEX).status['ready']:
+            while not _pc_instance.describe_index(PINECONE_INDEX).status['ready']:
                 time.sleep(1)
         
-        _index_instance = pc.Index(PINECONE_INDEX)
+        _index_instance = _pc_instance.Index(PINECONE_INDEX)
         return _index_instance
     except Exception as e:
-        print(f"Warning: Could not connect to or create Pinecone Index. Vector features will be disabled. Error: {e}")
+        logger.warning(f"Could not connect to or create Pinecone Index. Vector features will be disabled. Error: {e}")
         return None
 
 def store_research_data(topic: str, paper_id: str, vector: list, metadata: dict):
