@@ -31,7 +31,7 @@ async def parse_paper(paper: dict):
     }}
     """
 
-    response = await call_llm(prompt, model="mixtral-8x7b-32768")
+    response = await call_llm(prompt, model="llama-3.3-70b-versatile")
     
     try:
         json_start = response.find("{")

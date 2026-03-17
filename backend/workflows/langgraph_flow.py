@@ -36,22 +36,21 @@ async def retrieve_papers_node(state: ResearchState):
 
 async def parse_papers_node(state: ResearchState):
     """
-    Parallel Paper Parsing (Async Processing Optimization)
+    Parallel Paper Parsing & Vector Persistence
     """
     papers = state.get("papers")
     topic = state.get("topic")
     
-    # 1. Parallel Parsing utilizing asyncio.gather
+    if not papers:
+        return {"parsed_papers": []}
+
     tasks = [parse_paper(p) for p in papers]
     parsed_papers = await asyncio.gather(*tasks)
     
-    # 2. Persistence (Parallelized with Thread Pool to avoid blocking Event Loop)
+    # Persistence
     loop = asyncio.get_event_loop()
     for parsed in parsed_papers:
-        # Generate embedding
         embedding = get_embeddings(f"{parsed['title']} : {parsed['parsed'][:1000]}")
-        
-        # Store in Pinecone through executor as it's a sync function
         await loop.run_in_executor(None, 
             store_research_data,
             topic,
@@ -66,37 +65,54 @@ async def parse_papers_node(state: ResearchState):
         
     return {"parsed_papers": parsed_papers}
 
-async def analyze_papers_node(state: ResearchState):
+async def research_reasoning_node(state: ResearchState):
+    """
+    Consolidated Reasoning Node (Fixes LangGraph Fan-out Error)
+    Runs Analysis, Trends, Contradictions, Gaps, and Graph Construction in true parallel.
+    """
     parsed = state.get("parsed_papers")
+    if not parsed:
+        return {}
+
+    # 1. Start parallel reasoning tasks
+    # Relationship: analyzer -> (contradictions, gaps)
+    # Others are independent
+    
+    # We'll run the primary analysis first, then others
     analysis = await analyze_papers(parsed)
-    return {"analysis": analysis}
-
-async def analyze_trends_node(state: ResearchState):
-    parsed = state.get("parsed_papers")
-    trends = await analyze_trends(parsed)
-    return {"trends": trends}
-
-async def detect_contradictions_node(state: ResearchState):
-    analysis = state.get("analysis")
-    contradictions = await detect_contradictions(analysis)
-    return {"contradictions": contradictions}
-
-async def gap_finder_node(state: ResearchState):
-    analysis = state.get("analysis")
-    gaps = await find_gaps(analysis)
-    return {"gaps": gaps}
-
-def graph_builder_node(state: ResearchState):
-    parsed = state.get("parsed_papers")
+    
+    # Now run sub-analyses and others in parallel
+    trends_task = analyze_trends(parsed)
+    contradictions_task = detect_contradictions(analysis)
+    gaps_task = find_gaps(analysis)
+    
+    # Graph build is sync but should be fast
     G = build_research_graph(parsed)
     graph_json = graph_to_json(G)
-    return {"graph_data": graph_json}
+    
+    # Wait for all reasoning to complete
+    trends, contradictions, gaps = await asyncio.gather(
+        trends_task, 
+        contradictions_task, 
+        gaps_task
+    )
+    
+    return {
+        "analysis": analysis,
+        "trends": trends,
+        "contradictions": contradictions,
+        "gaps": gaps,
+        "graph_data": graph_json
+    }
 
 async def generate_outputs_node(state: ResearchState):
     parsed = state.get("parsed_papers")
     gaps = state.get("gaps")
     
-    # Run these in parallel too
+    if not gaps:
+        return {"rrl": "No research gaps identified.", "proposal": "N/A"}
+
+    # Parallel generation
     rrl_task = generate_rrl(parsed, gaps)
     proposal_task = generate_proposal(gaps)
     
@@ -111,28 +127,13 @@ def build_research_graph_pipeline():
 
     workflow.add_node("retriever", retrieve_papers_node)
     workflow.add_node("parser", parse_papers_node)
-    workflow.add_node("graph_builder", graph_builder_node)
-    workflow.add_node("analyzer", analyze_papers_node)
-    workflow.add_node("trends_analyzer", analyze_trends_node)
-    workflow.add_node("contradiction_finder", detect_contradictions_node)
-    workflow.add_node("gap_finder", gap_finder_node)
+    workflow.add_node("reasoner", research_reasoning_node)
     workflow.add_node("writer", generate_outputs_node)
 
     workflow.set_entry_point("retriever")
     workflow.add_edge("retriever", "parser")
-    
-    workflow.add_edge("parser", "graph_builder")
-    workflow.add_edge("parser", "analyzer")
-    workflow.add_edge("parser", "trends_analyzer")
-    
-    workflow.add_edge("analyzer", "contradiction_finder")
-    workflow.add_edge("analyzer", "gap_finder")
-    
-    workflow.add_edge("gap_finder", "writer")
-    workflow.add_edge("trends_analyzer", "writer")
-    workflow.add_edge("contradiction_finder", "writer")
-    workflow.add_edge("graph_builder", "writer")
-    
+    workflow.add_edge("parser", "reasoner")
+    workflow.add_edge("reasoner", "writer")
     workflow.add_edge("writer", END)
 
     return workflow.compile()

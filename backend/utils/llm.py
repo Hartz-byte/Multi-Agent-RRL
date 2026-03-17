@@ -9,7 +9,7 @@ client = AsyncGroq(
     http_client=httpx.AsyncClient()
 )
 
-async def call_llm(prompt, model="llama3-70b-8192"):
+async def call_llm(prompt, model="llama-3.3-70b-versatile"):
     """
     Asynchronous LLM call using Groq
     """
