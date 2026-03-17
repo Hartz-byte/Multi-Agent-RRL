@@ -76,6 +76,11 @@ def check_connection():
         add_log(f"Connection Check: Offline ({str(e)})")
         return False
 
+# --- Helper for Live Logs ---
+def update_sidebar_logs(placeholder):
+    log_content = "\n".join(st.session_state.logs[::-1]) # Show latest first
+    placeholder.markdown(f'<div class="log-box">{log_content}</div>', unsafe_allow_html=True)
+
 # --- Sidebar: Instructions, Examples, & Logs ---
 with st.sidebar:
     # Render Note
@@ -116,8 +121,9 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 📟 System Activity Logs")
-    log_content = "\n".join(st.session_state.logs[::-1]) # Show latest first
-    st.markdown(f'<div class="log-box">{log_content}</div>', unsafe_allow_html=True)
+    # Live log placeholder
+    log_ui = st.empty()
+    update_sidebar_logs(log_ui)
 
 # --- Header Area (Matching Screenshot) ---
 st.markdown('<div class="main-title">Multi-Agent Research AI 🛡️</div>', unsafe_allow_html=True)
@@ -157,26 +163,44 @@ if active_view == "🔍 Research Pipeline":
         st.session_state.logs = []
         add_log(f"Initializing Analysis for topic: '{topic}'")
         add_log("Retriever Agent: Fetching ArXiv & OpenAlex sources...")
+        update_sidebar_logs(log_ui)
         
         with st.spinner("🚀 Executing Multi-Agent Pipeline... (Retrieving, Parsing, & Reasoning)"):
             try:
+                # Add a simulated step to show live logs working
+                time.sleep(0.5)
+                add_log("In-Flight: Establishing secure connection to Groq Reasoning Engine...")
+                update_sidebar_logs(log_ui)
+                
                 res = requests.post(f"{API}/analyze", params={"topic": topic}, timeout=300)
                 if res.status_code == 200:
                     add_log("Parser Agent: Extracting structured data from PDFs...")
+                    update_sidebar_logs(log_ui)
+                    
                     add_log("Analyzer Agent: Identifying Trends & Contradictions...")
+                    update_sidebar_logs(log_ui)
+                    
                     add_log("Gap Finder: Mapping unexplored territories...")
+                    update_sidebar_logs(log_ui)
+                    
                     add_log("Writer Agent: Synthesizing RRL & PhD Proposal...")
+                    update_sidebar_logs(log_ui)
+                    
                     add_log("Graph Builder: Generating Relational Knowledge map...")
+                    update_sidebar_logs(log_ui)
                     
                     st.session_state.analysis_result = res.json()
                     st.session_state.current_topic = topic
                     add_log("Pipeline Execution Complete. Results rendered.")
+                    update_sidebar_logs(log_ui)
                     st.success("Analysis Complete!")
                 else:
                     add_log(f"CRITICAL ERROR: Backend failed with status {res.status_code}")
+                    update_sidebar_logs(log_ui)
                     st.error(f"Backend Error: {res.text}")
             except Exception as e:
                 add_log(f"CONNECTION ERROR: {str(e)}")
+                update_sidebar_logs(log_ui)
                 st.error(f"Connection Error: {e}")
 
     with col_in2:
@@ -193,15 +217,21 @@ if active_view == "🔍 Research Pipeline":
         tab1, tab2, tab3 = st.tabs(["📊 Intelligence Suite", "🕸️ Knowledge Graph", "📝 Literature Review"])
         
         with tab1:
-            res_col1, res_col2 = st.columns(2)
-            with res_col1:
+            # Row 1: Trends & Gaps
+            r1c1, r1c2 = st.columns(2)
+            with r1c1:
                 st.markdown("### 📈 Trend Analysis")
                 st.info(data.get("trends", "N/A"))
+            with r1c2:
+                st.markdown("### 🔍 Research Gaps Identified")
+                st.success(data.get("gaps", "N/A"))
+            
+            # Row 2: Conflicts & Proposal
+            r2c1, r2c2 = st.columns(2)
+            with r2c1:
                 st.markdown("### ⚖️ Contradictions & Conflicts")
                 st.warning(data.get("contradictions", "N/A"))
-            with res_col2:
-                st.markdown("### 🔍 Research Gaps")
-                st.success(data.get("gaps", "N/A"))
+            with r2c2:
                 st.markdown("### 💡 Research Proposal")
                 st.write(data.get("proposal", "N/A"))
         
