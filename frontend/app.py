@@ -3,7 +3,10 @@ import requests
 import graphviz
 import time
 
-API = "http://localhost:10000"
+import os
+
+# Use environment variable for API URL in production, default to localhost for development
+API = os.getenv("BACKEND_URL", "http://localhost:10000")
 
 st.set_page_config(page_title="Multi-Agent Research AI", layout="wide", page_icon="🛡️")
 
