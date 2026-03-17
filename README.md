@@ -144,8 +144,8 @@ streamlit run frontend/app.py
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## Support
-If this project helped your research, give it a star on **[GitHub](https://github.com/Hartz-byte/Multi-Agent-RRL)**!
+## ⭐ Support
+If this project helped your research, give it a star!
 
 ---
 *Built for the Research Community.*
