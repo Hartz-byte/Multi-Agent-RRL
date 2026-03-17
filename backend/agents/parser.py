@@ -1,12 +1,17 @@
 from backend.utils.llm import call_llm
 from backend.tools.pdf_parser import parse_pdf_from_url
 import json
+import asyncio
 
-def parse_paper(paper: dict):
+async def parse_paper(paper: dict):
     """
-    Fetch PDF text and extract structured info with explicit entity extraction for the graph.
+    Asynchronous paper parsing with PDF support
     """
-    pdf_text = parse_pdf_from_url(paper["pdf_url"])
+    # Run URL download/parse in a separate thread if it's synchronous requests-based
+    # The pdf_parser currently uses `requests` which is sync.
+    loop = asyncio.get_event_loop()
+    pdf_text = await loop.run_in_executor(None, parse_pdf_from_url, paper["pdf_url"])
+    
     content_to_analyze = pdf_text[:4000] if pdf_text else paper["summary"]
     
     prompt = f"""
@@ -26,28 +31,25 @@ def parse_paper(paper: dict):
     }}
     """
 
-    response = call_llm(prompt, model="mixtral-8x7b-32768")
+    response = await call_llm(prompt, model="mixtral-8x7b-32768")
     
     try:
-        # Clean response string to ensure it's just JSON
-        # In case the LLM adds markdown or chatter
         json_start = response.find("{")
         json_end = response.rfind("}") + 1
         parsed_json = json.loads(response[json_start:json_end])
     except:
-        # Fallback if JSON parsing fails
-        parsed_json = {{
+        parsed_json = {
             "methodologies": ["Unknown"],
             "datasets": ["Unknown"],
             "limitations": [response[:200]],
             "contributions": ["Unknown"],
             "findings": response[:500]
-        }}
+        }
     
     return {
         "title": paper["title"],
         "year": paper.get("year"),
-        "parsed": response, # keep original for summary
+        "parsed": response, 
         "structured_data": parsed_json,
         "metadata": paper
     }

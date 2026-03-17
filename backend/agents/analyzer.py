@@ -1,10 +1,7 @@
 from backend.utils.llm import call_llm
 
-def analyze_papers(parsed_papers: list[dict]):
-    """
-    Standard analysis of multiple research papers
-    """
-    combined = "\n".join([f"Title: {p['title']}\nParse: {p['parsed']}" for p in parsed_papers])
+async def analyze_papers(parsed_papers: list[dict]):
+    combined = "\n".join([f"Title: {p['title']}\nSummary: {p['parsed'][:500]}" for p in parsed_papers])
 
     prompt = f"""
     Analyze the following research papers:
@@ -16,12 +13,9 @@ def analyze_papers(parsed_papers: list[dict]):
     3. Summarize the collective contributions.
     """
 
-    return call_llm(prompt)
+    return await call_llm(prompt)
 
-def detect_contradictions(analysis: str):
-    """
-    Identify conflicting findings or opinions in the analysis
-    """
+async def detect_contradictions(analysis: str):
     prompt = f"""
     Review the following research analysis and identify any research contradictions, 
     divergent findings, or conflicting opinions between different studies:
@@ -30,15 +24,11 @@ def detect_contradictions(analysis: str):
     
     Output a structured list of contradictions.
     """
-    return call_llm(prompt)
+    return await call_llm(prompt)
 
-def analyze_trends(parsed_papers: list[dict]):
-    """
-    Track methodological or conceptual evolution over time
-    """
-    # Simple temporal analysis based on years
+async def analyze_trends(parsed_papers: list[dict]):
     sorted_papers = sorted(parsed_papers, key=lambda x: x.get('year', 0))
-    time_chain = "\n".join([f"Year {p.get('year')}: {p['title']} - {p['parsed']}" for p in sorted_papers])
+    time_chain = "\n".join([f"Year {p.get('year')}: {p['title']} - {p['parsed'][:300]}" for p in sorted_papers])
 
     prompt = f"""
     Perform a trend analysis on how research methods and focus areas have evolved over time:
@@ -50,4 +40,4 @@ def analyze_trends(parsed_papers: list[dict]):
     - Progressive solutions to old limitations
     """
     
-    return call_llm(prompt)
+    return await call_llm(prompt)

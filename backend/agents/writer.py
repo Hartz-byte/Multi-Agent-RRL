@@ -1,10 +1,7 @@
 from backend.utils.llm import call_llm
 
-def generate_rrl(parsed: list[dict], gaps: str):
-    """
-    Generate the formal Literature Review (RRL)
-    """
-    content = "\n".join([f"Title: {p['title']}\nContent: {p['parsed']}" for p in parsed])
+async def generate_rrl(parsed: list[dict], gaps: str):
+    content = "\n".join([f"Title: {p['title']}\nContent: {p['parsed'][:500]}" for p in parsed])
 
     prompt = f"""
     As a Senior Academic Researcher, write a comprehensive Literature Review (RRL) 
@@ -19,12 +16,9 @@ def generate_rrl(parsed: list[dict], gaps: str):
     Ensure proper academic tone and clear thematic organization.
     """
 
-    return call_llm(prompt)
+    return await call_llm(prompt)
 
-def generate_proposal(gaps: str):
-    """
-    Generate a research proposal based on identified gaps
-    """
+async def generate_proposal(gaps: str):
     prompt = f"""
     Based on the following research gaps, generate a structured research proposal for a potential PhD thesis or research grant:
     
@@ -40,4 +34,4 @@ def generate_proposal(gaps: str):
     6. Future Impact
     """
     
-    return call_llm(prompt)
+    return await call_llm(prompt)
