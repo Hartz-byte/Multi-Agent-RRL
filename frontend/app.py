@@ -322,4 +322,4 @@ elif active_view == "ℹ️ About the project":
 
     st.markdown("---")
     st.markdown("### ⭐️ Support the Project")
-    st.write("If this system assisted your research, check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
+    st.write("Liked my work? check out the [GitHub repo](https://github.com/Hartz-byte/Multi-Agent-RRL) and give it a star!")
