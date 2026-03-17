@@ -31,7 +31,7 @@ with st.sidebar:
     st.header("Project Guide")
     st.info("""
     1. Enter a research topic.
-    2. The system fetches papers from ArXiv & Semantic Scholar.
+    2. The system fetches papers from ArXiv & OpenAlex.
     3. Multi-agent reasoning identifies trends, conflicts, and gaps.
     4. A relational Knowledge Graph is constructed.
     5. A formal RRL and Research Proposal are generated.
