@@ -13,7 +13,7 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { font-size: 1.1rem; font-weight: 600; padding: 10px 20px; }
     .stAlert { border-radius: 10px; }
 </style>
-""", unsafe_allow_value=True)
+""", unsafe_allow_html=True)
 
 st.title("🛡️ Multi-Agent AI RRL Research System")
 st.caption("Autonomous Discovery of Research Gaps & Literature Synthesis")
@@ -162,7 +162,7 @@ if st.session_state.analysis_result:
                         submit_feedback(topic, p['title'], rating)
 else:
     # Empty state
-    st.markdown("<br><br><br>", unsafe_allow_value=True)
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
     st.center_col = st.columns([1, 2, 1])
     with st.center_col[1]:
         st.write("### 🧭 Ready to explore?")
