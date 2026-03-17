@@ -283,7 +283,7 @@ elif active_view == "ℹ️ About the project":
         - **Llama 3.1 8B**: The "Router"—used for fast relevance grading and metadata classification.
     - **Knowledge & Memory**:
         - **Pinecone Serverless**: High-performance vector database for persistent long-term research memory.
-        - **Local Embeddings**: `all-MiniLM-L6-v2` for ultra-fast semantic similarity checks.
+        - **Hugging Face Inference API**: Offloads embedding generation (all-MiniLM-L6-v2), saving 100% of local CPU/Memory for agentic reasoning.
     - **Visual & Interface**:
         - **Streamlit**: Modern, premium dashboard with real-time logging.
         - **Graphviz & NetworkX**: High-resolution relational knowledge graph rendering.
