@@ -7,6 +7,8 @@
 
 An autonomous, multi-agent platform designed to revolutionize academic research. By orchestrating specialized AI agents, this system moves beyond simple summaries to **discover research gaps**, flag **cross-study contradictions**, and synthesize **PhD-grade literature reviews (RRL)**.
 
+**Live Demo:** [multi-agent-rrl.streamlit.app](https://multi-agent-rrl.streamlit.app/)
+
 ---
 
 ## System Preview
